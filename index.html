@@ -5,69 +5,124 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="author" content="Sartor">
     <title>M808 cycle print</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js" integrity="sha384-IQsoLXl5PILFhosVNubq5LC7Qb9DXgDA9i+tQ8Zj3iwWAwPtgFTxbJ8NT4GN1R8p" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.min.js" integrity="sha384-cVKIPhGWiC2Al4u+LWgxfKTRIcfu0JTxR+EQDz/bgldoEyl4H0zUF0QKbrJ0EcQF" crossorigin="anonymous"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"
+            integrity="sha384-IQsoLXl5PILFhosVNubq5LC7Qb9DXgDA9i+tQ8Zj3iwWAwPtgFTxbJ8NT4GN1R8p"
+            crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.min.js"
+            integrity="sha384-cVKIPhGWiC2Al4u+LWgxfKTRIcfu0JTxR+EQDz/bgldoEyl4H0zUF0QKbrJ0EcQF"
+            crossorigin="anonymous"></script>
     <script type="importmap">
         {
             "imports": {
                 "vue": "https://unpkg.com/vue@3/dist/vue.esm-browser.js"
             }
         }
+
     </script>
     <script type="module">
         import { createApp } from 'vue'
-        import MyComponent from './main.js'
+        import App from './main.js'
 
-        createApp(MyComponent).mount('#app')
+        createApp(App).mount('#app')
     </script>
-    <script src="/main.js"></script>
 </head>
 <body class="bg-light">
 <div class="container">
     <main id="app">
-        <div class="py-5 text-center">
+        <div class="py-3 text-center">
             <h1>Cycle print</h1>
             <p class="lead">Post process your .gcode file to print in a loop</p>
         </div>
-        <div>Count is: {{ count }}</div>
-        <form>
+        <form enctype="multipart/form-data" @submit.prevent="onProcess">
             <div class="row g-3">
-                <div class="col-sm-12">
+                <div class="col-sm-6">
                     <label for="fileName" class="form-label">File</label>
-                    <input type="file" class="form-control" id="fileName" placeholder=".gcode" required>
+                    <input
+                            type="file"
+                            class="form-control"
+                            id="fileName"
+                            name="fileName"
+                            placeholder=".gcode"
+                            required
+                            accept=".gcode, .g"
+                    >
+                </div>
+                <div class="col-sm-6">
+                    <label for="dir" class="form-label">Drop direction</label>
+                    <radio :variants="dropDirections" name="dir" id="dir" required></radio>
                 </div>
             </div>
             <div class="row g-3 mt-3">
                 <div class="col-sm-4">
-                    <label for="zDown" class="form-label">Z down (mm)</label>
-                    <input type="text" class="form-control" id="zDown" placeholder="mm" value="10" required>
+                    <label for="zDown" class="form-label">Z down</label>
+                    <div class="input-group">
+                        <input
+                                type="number"
+                                class="form-control"
+                                id="zDown"
+                                name="zDown"
+                                value="10"
+                                required
+                        >
+                        <span class="input-group-text">mm</span>
+                    </div>
                     <div class="feedback">Distance to travel down before drop</div>
                 </div>
 
                 <div class="col-sm-4">
-                    <label for="xDrop" class="form-label">X drop coordinate (mm)</label>
-                    <input type="number" class="form-control" id="xDrop" placeholder="mm" value="10" required>
+                    <label for="xDrop" class="form-label">X drop coordinate</label>
+                    <div class="input-group">
+                        <input
+                                type="number"
+                                class="form-control"
+                                id="xDrop"
+                                name="xDrop"
+                                value="10"
+                                required
+                        >
+                        <span class="input-group-text">mm</span>
+                    </div>
                     <div class="feedback">X coordinate before drop</div>
                 </div>
 
                 <div class="col-sm-4">
-                    <label for="yDrop" class="form-label">Y drop coordinate (mm)</label>
-                    <input type="number" class="form-control" id="yDrop" placeholder="mm" value="10" required>
+                    <label for="yDrop" class="form-label">Y drop coordinate</label>
+                    <div class="input-group">
+                        <input
+                                type="number"
+                                class="form-control"
+                                id="yDrop"
+                                name="yDrop"
+                                value="10"
+                                required
+                        >
+                        <span class="input-group-text">mm</span>
+                    </div>
                     <div class="feedback">Y coordinate before drop</div>
                 </div>
             </div>
 
             <hr class="my-4">
 
-            <button class="w-100 btn btn-primary btn-lg" type="button" @click="process">Process</button>
+            <button class="w-100 btn btn-primary btn-lg" type="submit">Process</button>
+            <hr class="my-4">
+            <dl class="row" v-for="e in Object.entries(parseInfo)">
+                <dt class="col-md-4">{{ e[0] }}</dt> <dd class="col-md-8">{{ e[1] }}</dd>
+            </dl>
+            <hr class="my-4">
+            <div v-if="ready">
+                <button type="button" class="btn btn-lg btn-success" @click="onDownload">Download</button>
+            </div>
         </form>
     </main>
 
     <footer class="my-5 pt-5 text-muted text-center text-small">
         <p class="mb-1">&copy; 2024 Sartor, Ukraine</p>
         <ul class="list-inline">
-            <li class="list-inline-item"><a href="https://github.com/sartor/m808-cycle-print">Github source code</a></li>
+            <li class="list-inline-item"><a href="https://github.com/sartor/m808-cycle-print">Github source code</a>
+            </li>
         </ul>
     </footer>
 </div>
